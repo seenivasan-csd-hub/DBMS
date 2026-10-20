@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ auction.product_name }} — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page">
+    <a class="back-link" href="{{ url_for('admin_auctions') if g.user.role == 'admin' else url_for('browse') }}">← Back to auctions</a>
+    <div class="detail-layout">
+        <section class="detail-gallery">
+            <div class="detail-main-image">
+                <img src="{{ auction.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="{{ auction.product_name }}" data-image-fallback>
+                <span class="auction-status status-{{ auction.display_status|lower }}" data-auction-status data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}"><span></span>{{ auction.display_status }}</span>
+            </div>
+            <div class="image-source">
+                {% if auction.image_source %}Photo source: <a href="{{ auction.image_source }}" target="_blank" rel="noopener noreferrer">View image source ↗</a>
+                {% elif auction.image_url and auction.image_url.startswith('/static/uploads/') %}Image uploaded by an administrator
+                {% else %}Marketplace listing{% endif %}
+            </div>
+        </section>
+
+        <section class="detail-info">
+            <span class="eyebrow">{{ auction.category }} · LOT #{{ '%03d'|format(auction.auction_id) }}</span>
+            <h1>{{ auction.product_name }}</h1>
+            <p class="detail-description">{{ auction.description or 'A special find, ready for its next owner.' }}</p>
+            <div class="detail-price-panel">
+                <div><span class="data-label">{% if auction.bid_count %}Current highest bid{% else %}Starting price{% endif %}</span><strong class="detail-price">&#8377;{{ '%.2f'|format(auction.current_bid) }}</strong><span class="muted">{{ auction.bid_count }} accepted bid{% if auction.bid_count != 1 %}s{% endif %}</span></div>
+                <div class="detail-countdown"><span class="data-label" data-auction-status-label data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{% if auction.display_status == 'Upcoming' %}Starts in{% elif auction.display_status == 'Live' %}Time remaining{% else %}Ended{% endif %}</span><strong data-countdown="{{ (auction.start_time if auction.display_status == 'Upcoming' else auction.end_time)|datetime_iso }}" data-countdown-mode="{{ 'start' if auction.display_status == 'Upcoming' else 'end' }}" data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{{ auction.end_time|localtime }}</strong><small data-auction-closing-time data-auction-closing-prefix="Ends " data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">Ends {{ auction.end_time|localtime }}</small></div>
+            </div>
+            <div class="detail-facts"><div><span>Minimum next bid</span><strong>&#8377;{{ '%.2f'|format(auction.minimum_next_bid) }}</strong></div><div><span>Seller</span><strong>{{ auction.seller_name or 'Bidwell Marketplace' }}</strong></div><div><span>Starts</span><strong>{{ auction.start_time|localtime }}</strong></div></div>
+
+            {% if g.user.role == 'admin' %}
+            <div class="notice-box">Administrator view: bidding and watchlist actions are disabled.</div>
+            {% elif auction.display_status == 'Live' %}
+            <form class="place-bid-form" action="{{ url_for('place_bid') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="auction_id" value="{{ auction.auction_id }}">
+                <label for="bid_amount">Your bid</label>
+                <div class="bid-entry"><span>&#8377;</span><input id="bid_amount" name="bid_amount" type="number" min="{{ '%.2f'|format(auction.minimum_next_bid) }}" step="0.01" placeholder="{{ '%.2f'|format(auction.minimum_next_bid) }} or more" required><button class="button button-primary" type="submit">Place bid <span aria-hidden="true">↗</span></button></div>
+                <small>Minimum increment: &#8377;{{ '%.2f'|format(auction.min_increment) }}</small>
+            </form>
+            {% elif auction.display_status == 'Upcoming' %}<div class="notice-box">This auction has not started. Add it to your watchlist and return when bidding opens.</div>
+            {% else %}<div class="notice-box">Bidding has ended for this auction.</div>{% endif %}
+
+            {% if g.user.role != 'admin' %}<form action="{{ url_for('toggle_watchlist', auction_id=auction.auction_id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-secondary watch-button" type="submit">{{ '♥ Remove from watchlist' if is_watched else '♡ Add to watchlist' }}</button></form>{% endif %}
+            {% if winner %}<div class="winner-notice"><span class="eyebrow">AUCTION WINNER</span><strong>{{ winner.winner_name }}</strong><span>Winning bid: &#8377;{{ '%.2f'|format(winner.winning_bid) }}</span></div>{% endif %}
+        </section>
+    </div>
+
+    <section class="detail-history">
+        <div class="section-heading"><div><span class="eyebrow">THE ACTION</span><h2>Bid history</h2><p>Offers are listed from highest to lowest.</p></div><span class="result-count">{{ bids|length }} bids</span></div>
+        <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Bidder</th><th>Bid amount</th><th>Placed at</th><th></th></tr></thead>
+            <tbody>{% for bid in bids %}<tr><td>{{ bid.bidder_name }}</td><td class="money-cell">&#8377;{{ '%.2f'|format(bid.bid_amount) }}</td><td>{{ bid.bid_time|localtime }}</td><td>{% if loop.first %}<span class="table-tag">Highest bid</span>{% endif %}</td></tr>{% else %}<tr><td colspan="4" class="empty-table">No bids yet. Be the first to make an offer.</td></tr>{% endfor %}</tbody>
+        </table></div>
+    </section>
+
+    {% if related %}<section class="section-block"><div class="section-heading"><div><span class="eyebrow">KEEP LOOKING</span><h2>Related finds</h2></div><a class="text-link" href="{{ url_for('browse', category=auction.category) }}">More in {{ auction.category }} →</a></div><div class="auction-grid">{% for auction in related %}{% include 'partials/auction_card.html' %}{% endfor %}</div></section>{% endif %}
+</div>
+{% endblock %}

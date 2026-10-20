@@ -1,219 +1,30 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Auction Management System</title>
-    <style>
-        .auth-links {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.auth-links a {
-    display: inline-block;
-    padding: 12px 24px;
-    background: #1976b9;
-    color: white;
-    text-decoration: none;
-    border-radius: 8px;
-    font-weight: bold;
-}
-
-.auth-links a:hover {
-    background: #125a8c;
-}
-        body {
-            font-family: Arial, sans-serif;
-            background: #f3f5f9;
-            margin: 0;
-            padding: 30px;
-            color: #202938;
-        }
-
-        h1 { text-align: center; color: #173b68; }
-
-        .auction {
-            background: white;
-            max-width: 650px;
-            margin: 22px auto;
-            padding: 22px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px #00000012;
-        }
-
-        input, select, button {
-            box-sizing: border-box;
-            width: 100%;
-            padding: 11px;
-            margin: 7px 0;
-        }
-
-        button {
-            background: #1769aa;
-            color: white;
-            border: 0;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .success { color: #167642; }
-        .error { color: #b42318; }
-        .price { color: #167642; font-weight: bold; }
-    </style>
-</head>
-<body>
-    <h1>Online Auction Management System</h1>
-    
-
-<div class="auth-links">
-    {% if session.get('user_id') %}
-        <span>Welcome, {{ session.get('user_name', 'User') }}</span>
-        <a href="{{ url_for('logout') }}">Logout</a>
-    {% else %}
-        <div class="auth-buttons">
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Create Account</a>
+{% extends "base.html" %}
+{% block title %}Discover auctions — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell home-page">
+    <section class="hero-panel">
+        <div class="hero-copy"><span class="eyebrow"><span class="eyebrow-mark">✦</span> A MARKETPLACE FOR THE UNEXPECTED</span>
+            <h1>Good finds.<br><em>Great</em> stories.</h1>
+            <p>Discover one-of-a-kind pieces, place your bid, and bring home something worth talking about.</p>
+            <form class="hero-search" action="{{ url_for('browse') }}" method="get"><label class="sr-only" for="hero-search">Search auctions</label><span aria-hidden="true">⌕</span><input id="hero-search" name="q" type="search" placeholder="Try “film camera” or “ceramics”"><button class="button button-primary" type="submit">Find an auction</button></form>
+            <div class="hero-note"><span class="live-pulse"></span> {{ counts.live_count }} live auctions right now</div>
         </div>
-    {% endif %}
+        <div class="hero-visual" aria-hidden="true"><div class="hero-disc"></div><div class="hero-frame"><span>LOT NO. 001</span><strong>Every bid<br>starts a story.</strong><i>B.</i></div><div class="hero-sticker">CURATED<br>FINDS</div><span class="hero-visual-caption">DISCOVER · BID · WIN</span></div>
+    </section>
+    <section class="trust-row"><div><strong>{{ counts.product_count }}</strong><span>curated finds</span></div><div><strong>{{ counts.bid_count }}</strong><span>bids placed</span></div><div class="trust-message">Every item has a story. Make it yours.</div><a href="{{ url_for('auction_history') }}">Explore past auctions <span>↗</span></a></section>
+
+    <section class="section-block" id="live-auctions"><div class="section-heading"><div><span class="eyebrow">DON'T MISS OUT</span><h2>Live right now</h2><p>These auctions are open for bids.</p></div><a class="text-link" href="{{ url_for('browse', status='Live') }}">See all live auctions <span>→</span></a></div>
+        <div class="auction-grid">{% for auction in live_auctions %}{% include 'partials/auction_card.html' %}{% else %}<div class="empty-state"><span>✦</span><h3>No live auctions at the moment</h3><p>Browse upcoming listings or check back soon for new finds.</p><a class="button button-secondary" href="{{ url_for('browse') }}">Browse all auctions</a></div>{% endfor %}</div>
+    </section>
+
+    <section class="category-strip"><div><span class="eyebrow">FIND YOUR NEXT FAVOURITE</span><h2>Browse by category</h2></div><div class="category-chips">{% for item in categories %}<a href="{{ url_for('browse', category=item.category) }}">{{ item.category }} <span>↗</span></a>{% else %}<a href="{{ url_for('browse') }}">All auctions <span>↗</span></a>{% endfor %}</div></section>
+
+    <section class="section-block"><div class="section-heading"><div><span class="eyebrow">FRESH ON THE BLOCK</span><h2>Recently added</h2><p>New listings from across the marketplace.</p></div><a class="text-link" href="{{ url_for('browse', sort='newest') }}">Browse all <span>→</span></a></div>
+        <div class="auction-grid">{% for auction in recent_auctions %}{% include 'partials/auction_card.html' %}{% else %}<div class="empty-state"><h3>No products listed yet</h3><p>New auctions will appear here when they are added.</p></div>{% endfor %}</div>
+    </section>
+
+    <section class="section-block two-column-sections"><div><div class="section-heading"><div><span class="eyebrow">POPULAR WITH BIDDERS</span><h2>Most bids</h2></div><a class="text-link" href="{{ url_for('browse', sort='popular') }}">More <span>→</span></a></div><div class="compact-auction-list">{% for auction in popular_auctions[:4] %}<a class="compact-auction" href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}"><img src="{{ auction.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="" loading="lazy" data-image-fallback><span><strong>{{ auction.product_name }}</strong><small>{{ auction.bid_count }} bids · <span data-auction-status data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{{ auction.display_status }}</span></small></span><b>&#8377;{{ '%.2f'|format(auction.current_bid) }}</b></a>{% else %}<p class="empty-inline">Popular listings will appear here.</p>{% endfor %}</div></div>
+        <div><div class="section-heading"><div><span class="eyebrow">TIME IS TICKING</span><h2>Ending soon</h2></div><a class="text-link" href="{{ url_for('browse', status='Live', sort='ending') }}">See all <span>→</span></a></div><div class="compact-auction-list">{% for auction in ending_auctions[:4] %}<a class="compact-auction" href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}"><img src="{{ auction.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="" loading="lazy" data-image-fallback><span><strong>{{ auction.product_name }}</strong><small>{{ auction.bid_count }} bids · Ends <span data-auction-closing-time data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{{ auction.end_time|localtime }}</span></small></span><b>&#8377;{{ '%.2f'|format(auction.current_bid) }}</b></a>{% else %}<p class="empty-inline">No active auctions are ending soon.</p>{% endfor %}</div></div>
+    </section>
 </div>
-
-
-    <h2 style="text-align:center">Available Auctions</h2>
-    
-<div style="text-align:center; margin:20px;">
-    <a href="{{ url_for('auction_history') }}"
-       style="
-           display:inline-block;
-           background:#1769aa;
-           color:white;
-           padding:12px 24px;
-           border-radius:8px;
-           text-decoration:none;
-           font-weight:bold;
-       ">
-        📋 View Auction History
-    </a>
-</div>
-
-
-    
-<h2 style="text-align:center">🏆 Winner Announcements</h2>
-
-{% for winner in winners %}
-    <section class="auction">
-        <h2>{{ winner.product_name }}</h2>
-
-        <p>
-            Winner:
-            <strong>{{ winner.winner_name }}</strong>
-        </p>
-
-        <p class="price">
-            Winning amount:
-            ₹{{ "%.2f"|format(winner.winning_bid) }}
-        </p>
-
-        <p>
-            Declared at: {{ winner.declared_at }}
-        </p>
-
-        <p style="color:green;font-weight:bold">
-            Auction completed
-        </p>
-    </section>
-{% else %}
-    <p style="text-align:center">
-        No winners have been announced yet.
-    </p>
-{% endfor %}
-
-<h2 style="text-align:center">💳 Payment Management</h2>
-
-{% for payment in payments %}
-    <section class="auction">
-        <h2>{{ payment.product_name }}</h2>
-
-        <p>
-            Winner: <strong>{{ payment.winner_name }}</strong>
-        </p>
-
-        <p class="price">
-            Amount: ₹{{ "%.2f"|format(payment.amount) }}
-        </p>
-
-        <p>
-            Payment status:
-            <strong>{{ payment.payment_status }}</strong>
-        </p>
-
-        {% if payment.payment_status == "Pending" %}
-            <form action="{{ url_for('mark_paid',
-                           payment_id=payment.payment_id) }}"
-                  method="POST">
-                <button type="submit">Mark as Paid (Demo)</button>
-            </form>
-        {% endif %}
-
-        {% if payment.payment_date %}
-            <p>Payment date: {{ payment.payment_date }}</p>
-        {% endif %}
-    </section>
-{% else %}
-    <p style="text-align:center">No payment records yet.</p>
-{% endfor %}
-
-
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% for category, message in messages %}
-            <p class="{{ category }}" style="text-align:center">
-                {{ message }}
-            </p>
-        {% endfor %}
-    {% endwith %}
-
-   
-{% for auction in auctions %}
-    <section class="auction">
-        <h2>{{ auction.product_name }}</h2>
-
-        <p>
-            Starting price:
-            ₹{{ "%.2f"|format(auction.starting_price) }}
-        </p>
-
-        {% if auction.status == "Active" %}
-            <form action="{{ url_for('place_bid') }}" method="POST">
-                <input type="hidden"
-                       name="auction_id"
-                       value="{{ auction.auction_id }}">
-
-                <label>Select bidder</label>
-                <select name="user_id" required>
-                    {% for user in users %}
-                        <option value="{{ user.user_id }}">
-                            {{ user.name }}
-                        </option>
-                    {% endfor %}
-                </select>
-
-                <label>Your bid amount (₹)</label>
-                <input type="number"
-                       name="bid_amount"
-                       min="0.01"
-                       step="0.01"
-                       required>
-
-                <button type="submit">Place Bid</button>
-            </form>
-        {% endif %}
-    </section>
-{% else %}
-    <p style="text-align:center">No auctions found.</p>
-{% endfor %}
-</body>
-</html>
+{% endblock %}

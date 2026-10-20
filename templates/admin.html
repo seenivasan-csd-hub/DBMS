@@ -1,181 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Admin dashboard — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page admin-page">
+    <header class="page-heading">
+        <div><span class="eyebrow">MARKETPLACE OPERATIONS</span><h1>Dashboard</h1><p>Live activity and auction performance at a glance.</p></div>
+        <a class="button button-primary" href="{{ url_for('admin_auctions') }}">Create an auction <span aria-hidden="true">+</span></a>
+    </header>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <section class="metrics-grid">
+        <article class="metric-card metric-feature"><span>Registered users</span><strong>{{ stats.total_users }}</strong><small>Customer accounts</small></article>
+        <article class="metric-card"><span>Products listed</span><strong>{{ stats.total_products }}</strong><small>Active listings</small></article>
+        <article class="metric-card"><span>Total auctions</span><strong>{{ stats.total_auctions }}</strong><small>{{ stats.ended_auctions }} ended</small></article>
+        <article class="metric-card"><span>Live auctions</span><strong>{{ stats.live_auctions }}</strong><small>{{ stats.upcoming_auctions }} upcoming</small></article>
+        <article class="metric-card"><span>Accepted bids</span><strong>{{ stats.total_bids }}</strong><small>{{ stats.bids_today }} today</small></article>
+        <article class="metric-card"><span>Unique bidders</span><strong>{{ stats.unique_bidders }}</strong><small>{{ stats.ending_soon }} ending within 24 hours</small></article>
+        <article class="metric-card metric-wide"><span>Paid payments</span><strong>&#8377;{{ '%.2f'|format(stats.total_paid) }}</strong><small>{{ stats.paid_payments }} payments marked complete</small></article>
+    </section>
 
-    <style>
-        * { box-sizing: border-box; }
+    <section class="dashboard-charts">
+        <article class="chart-panel"><div class="panel-heading"><div><span class="eyebrow">LAST 7 DAYS</span><h2>Bid activity</h2></div><span class="chart-accent" aria-hidden="true">●</span></div><div class="bar-chart">{% for item in bid_chart %}<div class="bar-column"><span>{{ item.total }}</span><i style="height: {{ item.height }}%"></i><small>{{ item.label }}</small></div>{% endfor %}</div></article>
+        <article class="chart-panel"><div class="panel-heading"><div><span class="eyebrow">LAST 7 DAYS</span><h2>New registrations</h2></div><span class="chart-accent chart-purple" aria-hidden="true">●</span></div><div class="bar-chart chart-purple-bars">{% for item in registration_chart %}<div class="bar-column"><span>{{ item.total }}</span><i style="height: {{ item.height }}%"></i><small>{{ item.label }}</small></div>{% endfor %}</div></article>
+        <article class="chart-panel status-chart"><div class="panel-heading"><div><span class="eyebrow">SCHEDULE</span><h2>Auction status</h2></div></div><div class="status-breakdown">{% set status_total = status_counts.Live + status_counts.Upcoming + status_counts.Ended %}{% for name, value in status_counts.items() %}<div><span class="status-swatch status-swatch-{{ name|lower }}"></span><span>{{ name }}</span><strong>{{ value }}</strong><small>{{ ((value * 100 / status_total)|round|int) if status_total else 0 }}%</small></div>{% endfor %}</div></article>
+    </section>
 
-        body {
-            margin: 0;
-            padding: 30px;
-            font-family: Arial, sans-serif;
-            background: #f1f4f9;
-            color: #17365d;
-        }
+    <section class="dashboard-rankings">
+        <article class="chart-panel ranking-panel"><div class="panel-heading"><div><span class="eyebrow">BIDDING LEADERBOARD</span><h2>Bid activity by auction</h2></div></div><div class="activity-ranking">{% for item in auction_activity %}<div class="activity-row"><span class="activity-name">#{{ '%03d'|format(item.auction_id) }} · {{ item.product_name }}</span><span class="activity-track"><i style="width: {{ item.height }}%"></i></span><strong>{{ item.bid_count }}</strong></div>{% else %}<p class="empty-inline">Auction activity will appear after bids are placed.</p>{% endfor %}</div></article>
+        <article class="chart-panel ranking-panel"><div class="panel-heading"><div><span class="eyebrow">MOST POPULAR</span><h2>Products by bid count</h2></div></div><div class="activity-ranking">{% for item in popular_products %}<div class="activity-row"><span class="activity-name">{{ item.product_name }}</span><span class="activity-track"><i style="width: {{ item.height }}%"></i></span><strong>{{ item.bid_count }}</strong></div>{% else %}<p class="empty-inline">Product activity will appear after bids are placed.</p>{% endfor %}</div></article>
+    </section>
 
-        .container {
-            max-width: 1100px;
-            margin: auto;
-        }
+    <section class="dashboard-columns">
+        <article class="data-panel"><div class="panel-heading"><div><span class="eyebrow">LATEST ACTIVITY</span><h2>Recent bids</h2></div><a class="text-link" href="{{ url_for('admin_bids') }}">Full bid history →</a></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Product</th><th>Bidder</th><th>Amount</th><th>Time</th></tr></thead><tbody>{% for bid in recent_bids %}<tr><td class="strong-cell"><a href="{{ url_for('auction_detail', auction_id=bid.auction_id) }}">{{ bid.product_name }}</a></td><td>{{ bid.bidder_name }}</td><td class="money-cell">&#8377;{{ '%.2f'|format(bid.bid_amount) }}</td><td>{{ bid.bid_time|localtime('%d %b, %I:%M %p') }}</td></tr>{% else %}<tr><td colspan="4" class="empty-table">No accepted bids yet.</td></tr>{% endfor %}</tbody></table></div></article>
+        <article class="data-panel"><div class="panel-heading"><div><span class="eyebrow">JOINED RECENTLY</span><h2>New members</h2></div><a class="text-link" href="{{ url_for('admin_users') }}">Manage users →</a></div><div class="member-list">{% for member in recent_users %}<div class="member-row"><span class="nav-avatar">{{ member.name[:1]|upper }}</span><span><strong>{{ member.name }}</strong><small>{{ member.email }} · {{ member.created_at|localtime('%d %b %Y') }}</small></span></div>{% else %}<p class="empty-inline">No member accounts yet.</p>{% endfor %}</div></article>
+    </section>
 
-        h1, .subtitle { text-align: center; }
-
-        .subtitle { color: #64748b; }
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(
-                auto-fit, minmax(210px, 1fr)
-            );
-            gap: 18px;
-            margin: 30px 0;
-        }
-
-        .card, .panel {
-            background: white;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px #0001;
-        }
-
-        .card h3 {
-            margin-top: 0;
-            font-size: 16px;
-            color: #64748b;
-        }
-
-        .number {
-            font-size: 30px;
-            font-weight: bold;
-            color: #1769aa;
-        }
-
-        .panel { margin-bottom: 25px; }
-
-        .table-wrap { overflow-x: auto; }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 13px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background: #1769aa;
-            color: white;
-        }
-
-        .links {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 25px;
-        }
-
-        .links a {
-            background: #1769aa;
-            color: white;
-            padding: 12px 18px;
-            border-radius: 7px;
-            text-decoration: none;
-        }
-    </style>
-</head>
-
-<body>
-<div class="container">
-    <h1>📊 Admin Dashboard</h1>
-    <p class="subtitle">
-        Online Auction Management System
-    </p>
-
-    <div class="cards">
-        <div class="card">
-            <h3>Total Users</h3>
-            <div class="number">{{ stats.total_users }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Total Products</h3>
-            <div class="number">{{ stats.total_products }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Total Auctions</h3>
-            <div class="number">{{ stats.total_auctions }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Total Bids</h3>
-            <div class="number">{{ stats.total_bids }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Closed Auctions</h3>
-            <div class="number">{{ stats.closed_auctions }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Paid Payments</h3>
-            <div class="number">{{ stats.paid_payments }}</div>
-        </div>
-
-        <div class="card">
-            <h3>Total Paid (Demo)</h3>
-            <div class="number">
-                ₹{{ "%.2f"|format(stats.total_paid) }}
-            </div>
-        </div>
-    </div>
-
-    <div class="panel">
-        <h2>📦 Product Bidding Statistics</h2>
-
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Total Bids</th>
-                        <th>Highest Bid</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                {% for item in product_stats %}
-                    <tr>
-                        <td>{{ item.product_name }}</td>
-                        <td>{{ item.bid_count }}</td>
-                        <td>
-                            ₹{{ "%.2f"|format(item.highest_bid) }}
-                        </td>
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="3">No products found.</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <div class="links">
-        <a href="{{ url_for('home') }}">🏠 Auctions</a>
-        <a href="{{ url_for('auction_history') }}">
-            📋 Auction History
-        </a>
-    </div>
+    <section class="data-panel ending-panel"><div class="panel-heading"><div><span class="eyebrow">NEXT 24 HOURS</span><h2>Auctions ending soon</h2></div><a class="text-link" href="{{ url_for('admin_auctions') }}">Manage auctions →</a></div><div class="ending-list">{% for auction in ending_soon %}<a href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}"><img src="{{ auction.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="" data-image-fallback><span><strong>{{ auction.product_name }}</strong><small>{{ auction.bid_count }} bids · ends <span data-auction-closing-time data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{{ auction.end_time|localtime }}</span></small></span><b>&#8377;{{ '%.2f'|format(auction.current_bid) }}</b></a>{% else %}<p class="empty-inline">No active auctions end in the next 24 hours.</p>{% endfor %}</div></section>
 </div>
-</body>
-</html>
+{% endblock %}

@@ -1,73 +1,16 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Register - Online Auction</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f1f4f9;
-            padding: 30px 15px;
-        }
-        .container {
-            max-width: 420px;
-            margin: 40px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px #0001;
-        }
-        h1 { text-align: center; color: #173f70; }
-        label { display: block; margin-top: 16px; }
-        input {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 12px;
-            margin-top: 7px;
-        }
-        button {
-            width: 100%;
-            padding: 13px;
-            margin-top: 22px;
-            background: #1769aa;
-            color: white;
-            border: 0;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .message { color: #b42318; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Create Account</h1>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <p class="message">{{ message }}</p>
-            {% endfor %}
-        {% endwith %}
-
-        <form method="POST" action="{{ url_for('register') }}">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" required>
-
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
-
-            <label for="password">Password (minimum 8 characters)</label>
-            <input type="password" id="password" name="password"
-                   minlength="8" required>
-
-            <button type="submit">Register</button>
+{% extends "base.html" %}
+{% block title %}Create account — Bidwell{% endblock %}
+{% block content %}
+<div class="auth-page page-shell"><section class="auth-visual auth-register-visual"><span class="eyebrow">MAKE ROOM FOR A GOOD FIND</span><h1>There's<br>something<br><em>for you.</em></h1><div class="auth-orbit"></div><p>Join the auction community and start finding pieces with a past and a future.</p></section>
+    <section class="auth-card"><span class="eyebrow">GET STARTED</span><h2>Create your account</h2><p class="muted">It takes just a moment to join.</p>
+        <form action="{{ url_for('register') }}" method="post" class="form-stack"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label for="name">Full name</label><input id="name" name="name" type="text" autocomplete="name" maxlength="100" required>
+            <label for="email">Email address</label><input id="email" name="email" type="email" autocomplete="email" maxlength="100" required>
+            <label for="password">Password</label><div class="password-field"><input id="password" name="password" type="password" minlength="8" autocomplete="new-password" required><button type="button" class="password-toggle" data-password-toggle="password">Show</button></div><small class="field-help">Use at least 8 characters.</small>
+            <label for="confirm-password">Confirm password</label><div class="password-field"><input id="confirm-password" name="confirm_password" type="password" minlength="8" autocomplete="new-password" required><button type="button" class="password-toggle" data-password-toggle="confirm-password">Show</button></div>
+            <button class="button button-primary button-full" type="submit">Create account <span>↗</span></button>
         </form>
-
-        <p>Already registered?
-            <a href="{{ url_for('login') }}">Log in</a>
-        </p>
-        <p><a href="{{ url_for('home') }}">Back to Auctions</a></p>
-    </div>
-</body>
-</html>
+        <p class="auth-switch">Already a member? <a href="{{ url_for('login') }}">Log in</a></p>
+    </section>
+</div>
+{% endblock %}

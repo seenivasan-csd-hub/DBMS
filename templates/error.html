@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell error-page"><span class="error-code">{{ code }}</span><h1>We hit a small detour.</h1><p>{{ message }}</p><a class="button button-primary" href="{{ url_for('index') }}">Back to Bidwell <span>↗</span></a></div>
+{% endblock %}

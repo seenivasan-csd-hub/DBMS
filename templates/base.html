@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f7f7fb">
+    <title>{% block title %}Bidwell Auctions{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+    <div class="nav-shell">
+        <a class="brand" href="{{ url_for('index') }}" aria-label="Bidwell home"><span class="brand-mark">B</span><span>bidwell<span class="brand-dot">.</span></span></a>
+        {% if g.user %}
+        <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-menu-toggle><span></span><span></span><span class="sr-only">Toggle navigation</span></button>
+        <nav class="main-nav" id="main-nav" aria-label="Main navigation" data-menu>
+            {% if g.user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Overview</a>
+                <a href="{{ url_for('admin_users') }}">Users</a>
+                <a href="{{ url_for('admin_products') }}">Products</a>
+                <a href="{{ url_for('admin_auctions') }}">Auctions</a>
+                <a href="{{ url_for('admin_bids') }}">Bid history</a>
+                <a href="{{ url_for('auction_history') }}" class="{% if request.endpoint == 'auction_history' %}active{% endif %}">Results & payments</a>
+            {% else %}
+                <a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('browse') }}" class="{% if request.endpoint == 'browse' %}active{% endif %}">Browse auctions</a>
+                <a href="{{ url_for('my_bids') }}">My bids</a>
+                <a href="{{ url_for('watchlist') }}">Watchlist</a>
+                <a href="{{ url_for('profile') }}">My profile</a>
+                <a href="{{ url_for('auction_history') }}" class="{% if request.endpoint == 'auction_history' %}active{% endif %}">Past results</a>
+            {% endif %}
+        </nav>
+        <div class="nav-user"><span class="nav-avatar">{{ g.user.name[:1]|upper }}</span><span class="nav-user-name">{{ g.user.name }}</span>
+            <form action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="nav-logout" type="submit">Log out</button></form>
+        </div>
+        {% else %}
+        <nav class="main-nav auth-nav" aria-label="Main navigation"><a href="{{ url_for('login') }}">Log in</a><a href="{{ url_for('register') }}" class="button button-small button-primary">Create account</a></nav>
+        {% endif %}
+    </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}<div class="flash-stack page-shell" role="status" aria-live="polite">
+    {% for category, message in messages %}<div class="flash flash-{{ category }}"><span class="flash-icon">{% if category == 'success' %}✓{% else %}!{% endif %}</span>{{ message }}<button type="button" class="flash-close" aria-label="Dismiss message" data-dismiss>×</button></div>{% endfor %}
+    </div>{% endif %}
+{% endwith %}
+
+<main class="main-content">{% block content %}{% endblock %}</main>
+<footer class="site-footer"><div class="page-shell footer-inner"><a class="brand footer-brand" href="{{ url_for('index') }}"><span class="brand-mark">B</span><span>bidwell<span class="brand-dot">.</span></span></a><p>Good finds. Fair bids. A little bit of thrill.</p><span class="footer-credit">Product photos via <a href="https://unsplash.com/license" target="_blank" rel="noopener noreferrer">Unsplash License</a></span></div></footer>
+<script src="{{ url_for('static', filename='script.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

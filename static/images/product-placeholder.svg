@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Product image placeholder">
+  <rect width="800" height="600" fill="#f0eef8"/>
+  <circle cx="400" cy="258" r="108" fill="#e3def5"/>
+  <path d="M347 266h106m-88-39h70m-53-22h36m-90 94h182" fill="none" stroke="#7f70bf" stroke-linecap="round" stroke-width="13"/>
+  <path d="M315 328h170l25 73H290z" fill="#c9c1e8"/>
+  <text x="400" y="462" fill="#6d648f" font-family="Arial,sans-serif" font-size="24" text-anchor="middle">Image coming soon</text>
+</svg>

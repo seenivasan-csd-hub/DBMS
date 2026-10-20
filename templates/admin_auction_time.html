@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Edit Auction Time — Admin — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page">
+    <header class="page-heading">
+        <div><span class="eyebrow">SCHEDULE & STATUS</span><h1>Edit auction time</h1><p>Change the closing time for a published auction.</p></div>
+    </header>
+
+    <section class="admin-form-panel auction-time-panel">
+        <div class="panel-heading"><div><span class="eyebrow">LOT #{{ '%03d'|format(auction.auction_id) }}</span><h2>{{ auction.product_name }}</h2></div>
+            <span class="auction-status status-{{ auction.status|lower }}"><span></span>{{ auction.status }}</span>
+        </div>
+        <div class="auction-time-summary">
+            <div><span>Current start time</span><strong>{{ auction.start_time|localtime('%d %b %Y, %H:%M') }}</strong></div>
+            <div><span>Current closing time</span><strong>{{ auction.end_time|localtime('%d %b %Y, %H:%M') }}</strong></div>
+        </div>
+        <form class="admin-product-form auction-time-form" action="{{ url_for('edit_auction_time', auction_id=auction.auction_id) }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <label class="form-span">New closing date and time
+                <input name="end_time" type="datetime-local" value="{{ closing_value }}" min="{{ min_closing }}" required>
+                <small>Choose a time in the future, after this auction’s start time.</small>
+            </label>
+            <div class="form-span form-actions">
+                <button class="button button-primary" type="submit">Save changes</button>
+                <a class="button button-secondary" href="{{ url_for('admin_auctions') }}">Cancel</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

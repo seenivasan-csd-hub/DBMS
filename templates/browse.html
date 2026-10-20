@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Browse auctions — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page">
+    <header class="page-heading"><div><span class="eyebrow">THE MARKETPLACE</span><h1>Find your next <em>favourite.</em></h1><p>Explore the lots and make a bid on something you love.</p></div><span class="result-count">{{ total }} auction{% if total != 1 %}s{% endif %}</span></header>
+    <form class="filter-bar" action="{{ url_for('browse') }}" method="get">
+        <label class="search-control"><span aria-hidden="true">⌕</span><span class="sr-only">Search products</span><input type="search" name="q" value="{{ query }}" placeholder="Search products"></label>
+        <label><span class="sr-only">Category</span><select name="category"><option value="">All categories</option>{% for item in categories %}<option value="{{ item.category }}" {% if category == item.category %}selected{% endif %}>{{ item.category }}</option>{% endfor %}</select></label>
+        <label><span class="sr-only">Auction status</span><select name="status"><option value="">Any status</option>{% for item in ['Live','Upcoming','Ended'] %}<option value="{{ item }}" {% if status == item %}selected{% endif %}>{{ item }}</option>{% endfor %}</select></label>
+        <label><span class="sr-only">Sort auctions</span><select name="sort"><option value="newest" {% if sort == 'newest' %}selected{% endif %}>Recently added</option><option value="ending" {% if sort == 'ending' %}selected{% endif %}>Ending soon</option><option value="popular" {% if sort == 'popular' %}selected{% endif %}>Most bids</option><option value="price" {% if sort == 'price' %}selected{% endif %}>Highest bid</option></select></label>
+        <button class="button button-primary" type="submit">Apply filters</button>
+    </form>
+    <div class="auction-grid">{% for auction in auctions %}{% include 'partials/auction_card.html' %}{% else %}<div class="empty-state"><span>⌕</span><h3>No auctions match those filters</h3><p>Try another search or clear a filter to see more listings.</p><a class="button button-secondary" href="{{ url_for('browse') }}">Clear filters</a></div>{% endfor %}</div>
+    {% if page_count > 1 %}<nav class="pagination" aria-label="Auction pages">{% if page > 1 %}<a href="{{ url_for('browse', q=query, category=category, status=status, sort=sort, page=page-1) }}">← Previous</a>{% endif %}<span>Page {{ page }} of {{ page_count }}</span>{% if page < page_count %}<a href="{{ url_for('browse', q=query, category=category, status=status, sort=sort, page=page+1) }}">Next →</a>{% endif %}</nav>{% endif %}
+</div>
+{% endblock %}

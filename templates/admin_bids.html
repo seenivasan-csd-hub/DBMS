@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Bid history — Admin — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page"><header class="page-heading"><div><span class="eyebrow">TRANSPARENT ACTIVITY</span><h1>Bid history</h1><p>Accepted bids are shown as recorded. Bid values cannot be edited here.</p></div><span class="result-count">{{ total }} bids</span></header>
+    <form class="table-toolbar" action="{{ url_for('admin_bids') }}" method="get"><input type="search" name="q" value="{{ query }}" placeholder="Search product or bidder"><button class="button button-secondary" type="submit">Search</button></form>
+    <section class="data-panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Bid ID</th><th>Auction</th><th>Bidder</th><th>Amount</th><th>Highest bid</th><th>Status</th><th>Timestamp</th></tr></thead><tbody>{% for bid in bids %}<tr><td>#{{ bid.bid_id }}</td><td class="strong-cell"><a href="{{ url_for('auction_detail', auction_id=bid.auction_id) }}">{{ bid.product_name }}</a></td><td>{{ bid.bidder_name }}<small class="table-subline">{{ bid.email }}</small></td><td class="money-cell">&#8377;{{ '%.2f'|format(bid.bid_amount) }}</td><td>&#8377;{{ '%.2f'|format(bid.highest_bid or 0) }}</td><td>{{ bid.status }}</td><td>{{ bid.bid_time|localtime }}</td></tr>{% else %}<tr><td colspan="7" class="empty-table">No bids match that search.</td></tr>{% endfor %}</tbody></table></div></section>
+    {% if page_count > 1 %}<nav class="pagination"><span>Page {{ page }} of {{ page_count }}</span>{% if page > 1 %}<a href="{{ url_for('admin_bids', q=query, page=page-1) }}">← Previous</a>{% endif %}{% if page < page_count %}<a href="{{ url_for('admin_bids', q=query, page=page+1) }}">Next →</a>{% endif %}</nav>{% endif %}
+</div>
+{% endblock %}

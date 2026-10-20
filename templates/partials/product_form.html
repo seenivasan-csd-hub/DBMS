@@ -1,0 +1,11 @@
+<form class="admin-product-form" action="{{ url_for('admin_products') if not editing else url_for('edit_product', product_id=product.product_id) }}" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>Product name<input name="product_name" maxlength="100" value="{{ product.product_name if product else '' }}" required></label>
+    <label>Category<input name="category" maxlength="80" value="{{ product.category if product else '' }}" placeholder="Electronics, Collectibles, Home…" required></label>
+    <label>Starting price (INR)<input name="starting_price" type="number" min="0.01" step="0.01" value="{{ product.starting_price if product else '' }}" required></label>
+    <label class="form-span">Description<textarea name="description" maxlength="255" rows="3">{{ product.description if product else '' }}</textarea></label>
+    <label>Image URL (HTTPS)<input name="image_url" type="url" value="{{ product.image_url if product and product.image_url and not product.image_url.startswith('/static/uploads/') else '' }}" placeholder="https://…"></label>
+    <label>Or upload image<input name="image_file" type="file" accept="image/jpeg,image/png,image/webp"><small>JPG, PNG or WebP up to 5 MB.</small></label>
+    {% if product and product.image_source %}<label class="form-span">Image credit / source URL<input name="image_source" type="url" value="{{ product.image_source }}"></label>{% else %}<label class="form-span">Image credit / source URL<input name="image_source" type="url" placeholder="Optional source page"></label>{% endif %}
+    <div class="form-span form-actions"><button class="button button-primary" type="submit">{{ 'Save product' if editing else 'Add product' }} <span>↗</span></button>{% if editing %}<a class="button button-secondary" href="{{ url_for('admin_products') }}">Cancel</a>{% endif %}</div>
+</form>

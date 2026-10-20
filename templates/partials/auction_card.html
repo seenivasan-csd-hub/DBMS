@@ -1,0 +1,22 @@
+<article class="auction-card">
+    <a class="auction-image-wrap" href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}">
+        <img class="auction-image" src="{{ auction.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="{{ auction.product_name }}" loading="lazy" data-image-fallback>
+        <span class="auction-status status-{{ auction.display_status|lower }}" data-auction-status data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}"><span></span>{{ auction.display_status }}</span>
+    </a>
+    <div class="auction-card-body">
+        <div class="auction-category">{{ auction.category or 'Collectibles' }} <span>·</span> Lot #{{ '%03d'|format(auction.auction_id) }}</div>
+        <h3><a href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}">{{ auction.product_name }}</a></h3>
+        <p class="auction-short-description">{{ auction.description or 'A special find, ready for its next owner.' }}</p>
+        <div class="auction-card-data">
+            <div><span class="data-label">{% if auction.bid_count %}Current highest bid{% else %}Starting price{% endif %}</span><strong class="data-price">&#8377;{{ '%.2f'|format(auction.current_bid) }}</strong></div>
+            <div class="data-right"><span class="data-label">{{ auction.bid_count }} bid{% if auction.bid_count != 1 %}s{% endif %}</span><span class="countdown" data-countdown="{{ (auction.start_time if auction.display_status == 'Upcoming' else auction.end_time)|datetime_iso }}" data-countdown-mode="{{ 'start' if auction.display_status == 'Upcoming' else 'end' }}" data-auction-id="{{ auction.auction_id }}" data-schedule-url="{{ url_for('auction_schedules') }}">{{ auction.end_time|localtime('%d %b') }}</span></div>
+        </div>
+        <div class="auction-card-actions">
+            <a class="button button-primary button-grow" href="{{ url_for('auction_detail', auction_id=auction.auction_id) }}">View auction <span aria-hidden="true">↗</span></a>
+            {% if g.user.role != 'admin' %}<form action="{{ url_for('toggle_watchlist', auction_id=auction.auction_id) }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="icon-button" type="submit" aria-label="Toggle watchlist for {{ auction.product_name }}" title="Add or remove from watchlist">♡</button>
+            </form>{% endif %}
+        </div>
+    </div>
+</article>

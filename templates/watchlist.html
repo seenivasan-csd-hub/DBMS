@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Watchlist — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page"><header class="page-heading"><div><span class="eyebrow">KEEP AN EYE ON THE GOOD STUFF</span><h1>Your watchlist</h1><p>A handy place for auctions you don't want to lose track of.</p></div></header>
+    <div class="auction-grid">{% for auction in auctions %}{% include 'partials/auction_card.html' %}{% else %}<div class="empty-state"><span>♡</span><h3>Your watchlist is waiting</h3><p>Save an auction from its card or detail page to keep it close.</p><a class="button button-primary" href="{{ url_for('browse') }}">Find something good</a></div>{% endfor %}</div>
+</div>
+{% endblock %}

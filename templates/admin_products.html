@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Products — Admin — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page">
+    <header class="page-heading">
+        <div><span class="eyebrow">INVENTORY</span><h1>Products</h1><p>Add and maintain marketplace listings. Existing auctions remain in history when a product is archived.</p></div>
+    </header>
+    <section class="admin-form-panel">
+        <div class="panel-heading"><div><span class="eyebrow">NEW LISTING</span><h2>Add a product</h2></div></div>
+        {% include 'partials/product_form.html' %}
+    </section>
+    <form class="table-toolbar" action="{{ url_for('admin_products') }}" method="get">
+        <input type="search" name="q" value="{{ query }}" placeholder="Search products or categories">
+        <button class="button button-secondary" type="submit">Search</button>
+    </form>
+    <section class="data-panel">
+        <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Product</th><th>Category</th><th>Starting price</th><th>Status</th><th>Added</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td class="product-table-cell"><img src="{{ product.image_url or url_for('static', filename='images/product-placeholder.svg') }}" alt="" data-image-fallback><span><strong>{{ product.product_name }}</strong><small>{{ product.description or 'No description' }}</small></span></td>
+                    <td>{{ product.category }}</td>
+                    <td class="money-cell">&#8377;{{ '%.2f'|format(product.starting_price) }}</td>
+                    <td><span class="payment-status {{ 'payment-paid' if product.is_active else 'payment-none' }}">{{ 'Active' if product.is_active else 'Archived' }}</span></td>
+                    <td>{{ product.created_at|localtime('%d %b %Y') }}</td>
+                    <td class="action-cell">
+                        <a class="text-button" href="{{ url_for('edit_product', product_id=product.product_id) }}">Edit</a>
+                        {% if product.auction_id %}
+                        <button class="text-button auction-time-trigger" type="button" aria-haspopup="dialog" aria-controls="auction-time-modal" aria-expanded="false" data-open-auction-time
+                            data-action="{{ url_for('edit_auction_time', auction_id=product.auction_id) }}"
+                            data-auction-id="{{ product.auction_id }}"
+                            data-schedule-url="{{ url_for('auction_schedules') }}"
+                            data-product-name="{{ product.product_name }}"
+                            data-start-time="{{ product.start_time|datetime_iso }}"
+                            data-end-time="{{ product.end_time|datetime_iso }}"
+                            data-start-display="{{ product.start_time|localtime('%d %b %Y, %I:%M %p') }}"
+                            data-end-display="{{ product.end_time|localtime('%d %b %Y, %I:%M %p') }}"
+                            data-end-value="{{ product.end_time.strftime('%Y-%m-%dT%H:%M') }}"
+                            data-status="{{ product.auction_status }}">Auction Time</button>
+                        {% else %}<button class="text-button auction-time-trigger" type="button" disabled title="No live or upcoming auction">Auction Time</button>{% endif %}
+                        {% if product.is_active %}
+                        <form action="{{ url_for('archive_product', product_id=product.product_id) }}" method="post" data-confirm="Archive {{ product.product_name }}? Its auction history will be kept.">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-button danger-link" type="submit">Archive</button>
+                        </form>
+                        {% else %}
+                        <form action="{{ url_for('restore_product', product_id=product.product_id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-button" type="submit">Restore</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}<tr><td colspan="6" class="empty-table">No products found.</td></tr>{% endfor %}
+            </tbody>
+        </table></div>
+    </section>
+</div>
+
+<div id="auction-time-modal" class="auction-time-modal" data-auction-time-modal hidden>
+    <button class="auction-time-backdrop" type="button" data-close-auction-time aria-label="Close auction time dialog"></button>
+    <section class="auction-time-dialog" role="dialog" aria-modal="true" aria-labelledby="auction-time-title" aria-describedby="auction-time-description">
+        <button class="auction-time-close" type="button" data-close-auction-time aria-label="Close">×</button>
+        <span class="eyebrow">SCHEDULE & STATUS</span>
+        <div class="auction-time-dialog-heading">
+            <div><h2 id="auction-time-title">Auction time</h2><p id="auction-time-description">Update the closing time for this published auction.</p></div>
+            <span class="auction-time-status" data-modal-auction-status data-auction-id="" data-schedule-url="{{ url_for('auction_schedules') }}"></span>
+        </div>
+        <div class="auction-time-summary">
+            <div><span>Auction start</span><strong data-modal-start></strong></div>
+            <div><span>Current closing time</span><strong data-modal-closing data-auction-closing-time data-auction-id="" data-schedule-url="{{ url_for('auction_schedules') }}"></strong></div>
+        </div>
+        <div class="auction-time-countdown"><span>Time remaining</span><strong data-countdown data-countdown-mode="end" data-auction-id="" data-schedule-url="{{ url_for('auction_schedules') }}">—</strong></div>
+        <form class="auction-time-modal-form" method="post" data-auction-time-form>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="response_mode" value="modal">
+            <label for="auction-time-input">New closing date and time</label>
+            <input id="auction-time-input" name="end_time" type="datetime-local" min="{{ now_local }}" required>
+            <p class="auction-time-message" data-auction-time-message role="status" aria-live="polite" hidden></p>
+            <div class="auction-time-modal-actions">
+                <button class="button button-primary" type="submit">Save Changes</button>
+                <button class="button button-secondary" type="button" data-close-auction-time>Cancel</button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

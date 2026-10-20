@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}My bids — Bidwell{% endblock %}
+{% block content %}
+<div class="page-shell inner-page"><header class="page-heading"><div><span class="eyebrow">YOUR BIDDING HISTORY</span><h1>My bids</h1><p>See your offers and check how each auction is going.</p></div></header>
+    <section class="data-panel"><div class="table-wrap"><table class="data-table"><thead><tr><th>Lot</th><th>Your bid</th><th>Current highest</th><th>Status</th><th>Placed</th><th></th></tr></thead><tbody>{% for bid in bids %}<tr><td><a class="strong-cell" href="{{ url_for('auction_detail', auction_id=bid.auction_id) }}">{{ bid.product_name }}</a></td><td class="money-cell">&#8377;{{ '%.2f'|format(bid.bid_amount) }}</td><td>&#8377;{{ '%.2f'|format(bid.highest_bid or bid.starting_price) }}</td><td><span class="table-tag {% if bid.is_winning %}tag-winning{% endif %}">{{ 'Winning' if bid.is_winning and bid.display_status != 'Ended' else bid.display_status }}</span></td><td>{{ bid.bid_time|localtime }}</td><td><a class="text-link" href="{{ url_for('auction_detail', auction_id=bid.auction_id) }}">View →</a></td></tr>{% else %}<tr><td class="empty-table" colspan="6">You haven't placed a bid yet. Browse auctions to find your first one.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+{% endblock %}
