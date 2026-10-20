@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 30px;
+            font-family: Arial, sans-serif;
+            background: #f1f4f9;
+            color: #17365d;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        h1, .subtitle { text-align: center; }
+
+        .subtitle { color: #64748b; }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit, minmax(210px, 1fr)
+            );
+            gap: 18px;
+            margin: 30px 0;
+        }
+
+        .card, .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px #0001;
+        }
+
+        .card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #64748b;
+        }
+
+        .number {
+            font-size: 30px;
+            font-weight: bold;
+            color: #1769aa;
+        }
+
+        .panel { margin-bottom: 25px; }
+
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 13px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #1769aa;
+            color: white;
+        }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+
+        .links a {
+            background: #1769aa;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 7px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>📊 Admin Dashboard</h1>
+    <p class="subtitle">
+        Online Auction Management System
+    </p>
+
+    <div class="cards">
+        <div class="card">
+            <h3>Total Users</h3>
+            <div class="number">{{ stats.total_users }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Total Products</h3>
+            <div class="number">{{ stats.total_products }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Total Auctions</h3>
+            <div class="number">{{ stats.total_auctions }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Total Bids</h3>
+            <div class="number">{{ stats.total_bids }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Closed Auctions</h3>
+            <div class="number">{{ stats.closed_auctions }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Paid Payments</h3>
+            <div class="number">{{ stats.paid_payments }}</div>
+        </div>
+
+        <div class="card">
+            <h3>Total Paid (Demo)</h3>
+            <div class="number">
+                ₹{{ "%.2f"|format(stats.total_paid) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h2>📦 Product Bidding Statistics</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Total Bids</th>
+                        <th>Highest Bid</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                {% for item in product_stats %}
+                    <tr>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.bid_count }}</td>
+                        <td>
+                            ₹{{ "%.2f"|format(item.highest_bid) }}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="3">No products found.</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="links">
+        <a href="{{ url_for('home') }}">🏠 Auctions</a>
+        <a href="{{ url_for('auction_history') }}">
+            📋 Auction History
+        </a>
+    </div>
+</div>
+</body>
+</html>
